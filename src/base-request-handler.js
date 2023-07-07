@@ -4,20 +4,27 @@ import { ServiceUnconfiguredError, KeycloakError, InternalError } from './errors
 function baseRequestHandler (requestFunction, context) {
   const { exceptions, services } = context
   const { ForbiddenException } = exceptions
-  const { ItemsService } = services
   return async function (req, res, next) {
-    if (!req.accountability.user) return next(new ForbiddenException())
-    const usersService = new ItemsService('directus_users', { schema: req.schema, accountability: req.accountability });
-    const user = await usersService.readOne(req.accountability.user)
+    if (!req.accountability?.user) return next(new ForbiddenException())
+    const { UsersService } = services
+    const usersService = new UsersService({ schema: req.schema, accountability: req.accountability })
+    let user
+    try {
+      user = await usersService.readOne(req.accountability.user)
+    }
+    catch (err) {
+      console.error('Failed to get current user', req.accountability.user, err.message)
+      console.log('Accountability', JSON.stringify(req.accountability))
+    }
     const client = await getClient()
     if (client) {
       try {
         let userGroups = [], isAllowed = false
-        if (user.external_identifier) {
-          ({ data: userGroups } = await client.get(`/users/${user.external_identifier}/groups`))
+        if (user?.external_identifier) {
+          ({ data: userGroups } = await client.get(`/users/${user?.external_identifier}/groups`))
           isAllowed = !!userGroups.find(group => group.name === 'management')
         }
-        if (req.accountability.user.admin) isAllowed = true
+        if (req.accountability.admin) isAllowed = true
         if (!isAllowed) return next(new ForbiddenException())
 
         const result = await requestFunction({ req, res, next, client, exceptions, user, userGroups })
