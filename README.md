@@ -110,7 +110,7 @@ DELETE /keycloak/users/<ID>
 ```
 
 **Note:** Deleting users is currently disabled and will throw a `MethodNotAllowedError`.
-Please use `{ "enabled": false }` with `PUT` to block a user instead. 
+Please use `{ "enabled": false }` with `PATCH` to block a user instead. 
 
 ## Groups
 
