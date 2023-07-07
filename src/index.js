@@ -38,15 +38,26 @@ export default {
       delete data.type
       data.enabled = true
 
+      const { data: groups } = await ctx.client.get('/groups')
+
+      let profiles = []
+      if (Array.isArray(data.profiles)) {
+        profiles = groups.filter(group => profilePattern.test(group.name) && data.profiles.includes(group.name))
+        delete data.profiles
+      }
+
       const response = await ctx.client.post('/users', data)
       const location = new URL(response.headers.location)
       const userId = basename(location.pathname)
 
-      const { data: groups } = await ctx.client.get('/groups')
       const association = groups.find(group => group.name === associationName)
       if (association) await ctx.client.put(`/users/${userId}/groups/${association.id}`)
       const type = groups.find(group => group.name === typeName)
       if (type) await ctx.client.put(`/users/${userId}/groups/${type.id}`)
+
+      for (const profile of profiles) {
+        await ctx.client.put(`/users/${userId}/groups/${profile.id}`)
+      }
 
       const pwd = password.randomPassword({
         length: OTP_LENGTH,
