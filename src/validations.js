@@ -8,10 +8,10 @@ const profilePattern = /^gpu-/
 
 const userSchema = {
   id: { protected: true },
-  email: { validator: isEmail, require: true },
-  username: { validator: isAlphanumeric, require: true },
-  firstName: { validator: isAlpha, require: true },
-  lastName: { validator: isAlpha, require: true },
+  email: { validator: isEmail.default, require: true },
+  username: { validator: isAlphanumeric.default, require: true },
+  firstName: { validator: isAlpha.default, require: true },
+  lastName: { validator: isAlpha.default, require: true },
   association: {
     validator: value => enumAssociation.includes(value),
     require: true
