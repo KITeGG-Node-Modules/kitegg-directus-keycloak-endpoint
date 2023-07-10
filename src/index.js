@@ -9,7 +9,6 @@ const OTP_LENGTH = 6
 export default {
   id: 'keycloak',
   handler: (router, context) => {
-    const { InvalidPayloadException } = context.exceptions
     //
     // Users
     //
@@ -29,7 +28,11 @@ export default {
         validateUser(data, 'post')
       }
       catch (err) {
-        return ctx.next(new InvalidPayloadException(err.message))
+        ctx.res.status(400)
+        return ctx.res.send({
+          message: 'api_errors.validation_failed',
+          errorMessage: err.message
+        })
       }
 
       const associationName = data.association
@@ -93,13 +96,17 @@ export default {
     //
     // PATCH
     router.patch('/users/:id', baseRequestHandler(async ctx => {
-      const { client, req, next } = ctx
+      const { client, req } = ctx
       const data = req.body
       try {
         validateUser(data, 'patch')
       }
       catch (err) {
-        return next(new InvalidPayloadException(err.message))
+        ctx.res.status(400)
+        return ctx.res.send({
+          message: 'api_errors.validation_failed',
+          errorMessage: err.message
+        })
       }
       const { data: groups } = await client.get(`/groups`)
       const { data: userGroups } = await client.get(`/users/${req.params.id}/groups`)
@@ -146,9 +153,9 @@ export default {
 
     //
     // DELETE
-    router.delete('/users/:id', (req, res, next) => {
-      const { MethodNotAllowedException } = context.exceptions
-      next(new MethodNotAllowedException('Please disable user instead of deleting.', { allow: ['get', 'patch', 'post'] }))
+    router.delete('/users/:id', (req, res) => {
+      res.status(405)
+      res.send({ message: 'api_errors.method_not_allowed' })
     })
 
     //
