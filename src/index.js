@@ -1,8 +1,8 @@
 import { basename } from 'path'
-import * as password from 'secure-random-password'
 import { baseRequestHandler } from './base-request-handler.js'
 import { enumType, enumAssociation, profilePattern, validateUser } from './validations.js'
 import { filterUser } from './filter-props.js'
+import { generatePassword } from './random-password.js'
 
 const OTP_LENGTH = 6
 
@@ -62,10 +62,7 @@ export default {
         await ctx.client.put(`/users/${userId}/groups/${profile.id}`)
       }
 
-      const pwd = password.randomPassword({
-        length: OTP_LENGTH,
-        characters: [password.lower, password.upper, password.digits]
-      })
+      const pwd = generatePassword(OTP_LENGTH)
       await ctx.client.put(`/users/${userId}/reset-password`, {
         value: pwd,
         temporary: true
@@ -161,10 +158,7 @@ export default {
     //
     // Reset password
     router.post('/users/:id/password', baseRequestHandler(async ctx => {
-      const temporaryPassword = password.randomPassword({
-        length: OTP_LENGTH,
-        characters: [password.lower, password.upper, password.digits]
-      })
+      const temporaryPassword = generatePassword(OTP_LENGTH)
       await ctx.client.put(`/users/${ctx.req.params.id}/reset-password`, {
         value: temporaryPassword,
         temporary: true
