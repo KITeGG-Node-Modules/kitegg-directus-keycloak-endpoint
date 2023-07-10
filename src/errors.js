@@ -6,11 +6,14 @@ const ServiceUnconfiguredError = createError(
   400
 )
 
-const KeycloakError = createError(
-  'KEYCLOAK_ERROR',
-  'Keycloak error',
-  500
-)
+function keycloakErrorFactory (error) {
+  const { status, data } = error.response
+  return createError(
+    `KEYCLOAK_ERROR_${status}`,
+    data?.errorMessage || error.message,
+    status
+  )
+}
 
 const InternalError = createError(
   'INTERNAL_ERROR',
@@ -18,8 +21,15 @@ const InternalError = createError(
   500
 )
 
+const BadRequest = createError(
+  'BAD_REQUEST',
+  'Bad request',
+  400
+)
+
 export {
+  BadRequest,
   ServiceUnconfiguredError,
-  KeycloakError,
-  InternalError
+  InternalError,
+  keycloakErrorFactory
 }
