@@ -1,5 +1,5 @@
 {
-	"name": "kitegg-directus-keycloak-endpoint",
+	"name": "directus-extension-keycloak-endpoint",
 	"description": "Keycloak user administration through Directus",
 	"icon": "extension",
 	"version": "1.0.0",
