@@ -1,6 +1,6 @@
-import isEmail from 'validator/es/lib/isEmail'
-import isAlpha from 'validator/es/lib/isAlpha.js'
-import isAlphanumeric from 'validator/es/lib/isAlphanumeric.js'
+import isEmail from 'validator/lib/isEmail.js'
+import isAlpha from 'validator/lib/isAlpha.js'
+import isAlphanumeric from 'validator/lib/isAlphanumeric.js'
 
 const enumAssociation = ['hsm', 'hst', 'hfgg', 'hfgo', 'kisd']
 const enumType = ['staff', 'student', 'management']
