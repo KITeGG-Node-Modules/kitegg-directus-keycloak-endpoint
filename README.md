@@ -113,8 +113,7 @@ POST /keycloak/users/<ID>/password
 DELETE /keycloak/users/<ID>
 ```
 
-**Note:** Deleting users is currently disabled and will throw a `MethodNotAllowedError`.
-Please use `{ "enabled": false }` with `PATCH` to block a user instead. 
+Will try to delete the associated Directus User as well.
 
 ## Groups
 

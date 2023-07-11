@@ -182,10 +182,31 @@ export default {
 
     //
     // DELETE
-    router.delete('/users/:id', (req, res) => {
-      res.status(405)
-      res.send({ message: 'api_errors.method_not_allowed' })
-    })
+    router.delete('/users/:id', baseRequestHandler(async ctx => {
+      await ctx.client.delete(`/users/${ctx.req.params.id}`)
+      const usersService = new UsersService({ schema: ctx.req.schema, accountability: ctx.req.accountability })
+      try {
+        const user = (await usersService.readByQuery({
+          filter: {
+            external_identifier: ctx.req.params.id
+          }
+        })).shift()
+        if (user) {
+          await usersService.deleteOne(user.id)
+        }
+        logger.info(`${logPrefix}Deleted Directus user with ID ${user.id}`)
+        return {
+          id: ctx.req.params.id,
+          directusId: user?.id
+        }
+      } catch (err) {
+        logger.error(`${logPrefix}Failed to delete Directus user: ${err.message}`)
+        return {
+          id: ctx.req.params.id,
+          directusError: err.message
+        }
+      }
+    }, context))
 
     //
     // Reset password
