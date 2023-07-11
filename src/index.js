@@ -5,10 +5,13 @@ import { filterUser } from './filter-props.js'
 import { generatePassword } from './random-password.js'
 
 const OTP_LENGTH = 6
+const logPrefix = 'Keycloak Endpoint: '
 
 export default {
   id: 'keycloak',
   handler: (router, context) => {
+    const { services, logger } = context
+    const { ItemsService, UsersService } = services
     //
     // Users
     //
@@ -24,6 +27,7 @@ export default {
     // POST
     router.post('/users', baseRequestHandler(async ctx => {
       const data = ctx.req.body
+      const createDirectusUser = !data.skipDirectusUser
       try {
         validateUser(data, 'post')
       }
@@ -52,6 +56,7 @@ export default {
       const response = await ctx.client.post('/users', data)
       const location = new URL(response.headers.location)
       const userId = basename(location.pathname)
+      logger.info(`${logPrefix}Created Keycloak user with ID ${userId}`)
 
       const association = groups.find(group => group.name === associationName)
       if (association) await ctx.client.put(`/users/${userId}/groups/${association.id}`)
@@ -68,8 +73,35 @@ export default {
         temporary: true
       })
 
+      let directusUserId
+      if (createDirectusUser) {
+        const userPayload = {
+          provider: 'keycloak',
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          external_identifier: userId
+        }
+        const mappingService = new ItemsService('role_group_mapping', { schema: ctx.req.schema, accountability: ctx.req.accountability })
+        const usersService = new UsersService({ schema: ctx.req.schema, accountability: ctx.req.accountability })
+        try {
+          const groupId = `${association.name}-${type.name === 'management' ? 'staff' : type.name}`
+          const results = await mappingService.readByQuery({ filter: { groupId } })
+          const roleId = results.map(mapping => mapping.roleId).shift();
+          if (roleId) {
+            userPayload.role = roleId
+            directusUserId = await usersService.createOne(userPayload)
+            logger.info(`${logPrefix}Created Directus user with ID ${directusUserId}`)
+          }
+          else throw new Error('No matching role ID found')
+        } catch (err) {
+          logger.error(`${logPrefix}Failed to create Directus user: ${err.message}`)
+        }
+      }
+
       return Object.assign({
         id: userId,
+        directusUserId,
         temporaryPassword: pwd
       }, data)
     }, context))
