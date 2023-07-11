@@ -23,6 +23,9 @@ Creating a user sets `enabled` to `true` by default.
 
 The result contains a one-time password to be used for the first login.
 
+The request will also create a directus user linked to the Keycloak Account,
+unless `skipDirectusUser: true` is passed in the request body.
+
 ``` 
 POST /keycloak/users
 ```
@@ -44,6 +47,7 @@ Optional additional props:
 ```json
 {
   "enabled": false,
+  "skipDirectusUser": true,
   "profiles": [
     "gpu-s",
     "gpu-m",
