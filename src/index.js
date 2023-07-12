@@ -3,45 +3,10 @@ import { baseRequestHandler } from './base-request-handler.js'
 import { enumType, enumAssociation, profilePattern, validateUser } from './validations.js'
 import { filterUser } from './filter-props.js'
 import { generatePassword } from './random-password.js'
+import { handleErrorResponse } from './handle-error-response.js'
+import { isRequestAllowed } from './is-request-allowed.js'
 
-const OTP_LENGTH = 6
-const LOG_PREFIX = 'Keycloak Endpoint: '
-const TYPES = ['student', 'staff', 'management', 'admin']
-
-async function isRequestAllowed (ctx) {
-  const {client, req, userGroups} = ctx
-  let subjectTypeGroup, subjectGroups
-  if (req.params.id) ({data: subjectGroups} = await client.get(`/users/${req.params.id}/groups`))
-
-  if (req.method === 'POST') {
-    subjectTypeGroup = {name: req.body.type}
-  } else if (req.method === 'PATCH') {
-    if (req.body.type) subjectTypeGroup = {name: req.body.type}
-    else subjectTypeGroup = subjectGroups.find(group => TYPES.includes(group.name))
-  } else {
-    subjectTypeGroup = subjectGroups.find(group => TYPES.includes(group.name))
-  }
-
-  const userType = userGroups.find(group => TYPES.includes(group.name))
-  const userTypeIndex = TYPES.indexOf(userType ? userType.name : 'admin')
-  const subjectTypeIndex = TYPES.indexOf(subjectTypeGroup.name)
-
-  if (userTypeIndex < subjectTypeIndex) throw new Error('forbidden')
-}
-
-function handleErrorResponse (ctx, err) {
-  const {res} = ctx
-  if (err.message === 'validation_failed') {
-    res.status(400)
-    res.send({message: 'api_errors.validation_failed'})
-  } else if (err.message === 'forbidden') {
-    res.status(403)
-    res.send({message: 'api_errors.forbidden'})
-  } else {
-    res.status(500)
-    res.send({message: err.message})
-  }
-}
+import { LOG_PREFIX } from './constants.js'
 
 export default {
   id: 'keycloak',
@@ -86,7 +51,7 @@ export default {
         return handleErrorResponse(ctx, err)
       }
 
-      const {client, req, res, userGroups} = ctx
+      const {client, req} = ctx
       const data = req.body
       const createDirectusUser = !data.skipDirectusUser
 
@@ -118,7 +83,7 @@ export default {
         await client.put(`/users/${userId}/groups/${profile.id}`)
       }
 
-      const pwd = generatePassword(OTP_LENGTH)
+      const pwd = generatePassword()
       await client.put(`/users/${userId}/reset-password`, {
         value: pwd,
         temporary: true
@@ -169,7 +134,7 @@ export default {
         return handleErrorResponse(ctx, err)
       }
 
-      const {client, req, res, userGroups} = ctx
+      const {client, req} = ctx
       const data = req.body
 
       const {data: groups} = await client.get(`/groups`)
@@ -225,7 +190,7 @@ export default {
         return handleErrorResponse(ctx, err)
       }
 
-      const {client, req, res} = ctx
+      const {client, req} = ctx
       await client.delete(`/users/${ctx.req.params.id}`)
       const usersService = new UsersService({schema: req.schema, accountability: req.accountability})
       try {
@@ -254,7 +219,7 @@ export default {
     //
     // Reset password
     router.post('/users/:id/password', baseRequestHandler(async ctx => {
-      const {client, req, res} = ctx
+      const {client, req} = ctx
 
       try {
         await isRequestAllowed(ctx)
@@ -262,7 +227,7 @@ export default {
         return handleErrorResponse(ctx, err)
       }
 
-      const temporaryPassword = generatePassword(OTP_LENGTH)
+      const temporaryPassword = generatePassword()
       await client.put(`/users/${req.params.id}/reset-password`, {
         value: temporaryPassword,
         temporary: true
