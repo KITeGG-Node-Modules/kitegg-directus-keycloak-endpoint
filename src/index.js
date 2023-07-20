@@ -178,7 +178,7 @@ export default {
         delete data.profiles
       }
       const {data: result} = await client.put(`/users/${req.params.id}`, data)
-      return result
+      return result || { success: true }
     }, context))
 
     //
