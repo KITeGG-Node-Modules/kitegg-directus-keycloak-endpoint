@@ -2,6 +2,7 @@ import isEmail from 'validator/lib/isEmail.js'
 import isAlpha from 'validator/lib/isAlpha.js'
 import isAlphanumeric from 'validator/lib/isAlphanumeric.js'
 
+const alphaAndHyphenAndSpace = new RegExp(/^(\p{L}+([- ]\p{L}+)*)$/u)
 const enumAssociation = ['hsm', 'hst', 'hfgg', 'hfgo', 'kisd']
 const enumType = ['staff', 'student', 'management']
 const profilePattern = /^gpu-/
@@ -10,8 +11,8 @@ const userSchema = {
   id: { protected: true },
   email: { validator: isEmail.default, require: true },
   username: { validator: isAlphanumeric.default, require: true },
-  firstName: { validator: isAlpha.default, require: true },
-  lastName: { validator: isAlpha.default, require: true },
+  firstName: { validator: value => alphaAndHyphenAndSpace.test(value), require: true },
+  lastName: { validator: value => alphaAndHyphenAndSpace.test(value), require: true },
   association: {
     validator: value => enumAssociation.includes(value),
     require: true
