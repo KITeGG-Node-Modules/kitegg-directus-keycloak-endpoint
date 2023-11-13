@@ -127,6 +127,10 @@ export default {
     //
     // PATCH
     router.patch('/users/:id', baseRequestHandler(async ctx => {
+      if (!ctx.req.params.id || !ctx.req.params.id.length) {
+        ctx.res.status(400)
+        return ctx.res.send({message: 'api_errors.bad_request'})
+      }
       try {
         validateUser(ctx.req.body, 'patch')
         await isRequestAllowed(ctx)
@@ -184,6 +188,10 @@ export default {
     //
     // DELETE
     router.delete('/users/:id', baseRequestHandler(async ctx => {
+      if (!ctx.req.params.id || !ctx.req.params.id.length) {
+        ctx.res.status(400)
+        return ctx.res.send({message: 'api_errors.bad_request'})
+      }
       try {
         await isRequestAllowed(ctx)
       } catch (err) {
