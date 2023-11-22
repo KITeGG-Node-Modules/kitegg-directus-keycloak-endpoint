@@ -3,7 +3,7 @@ import isAlpha from 'validator/lib/isAlpha.js'
 import isAlphanumeric from 'validator/lib/isAlphanumeric.js'
 
 const alphaAndHyphenAndSpace = new RegExp(/^(\p{L}+([- ]\p{L}+)*)$/u)
-const enumAssociation = ['hsm', 'hst', 'hfgg', 'hfgo', 'kisd']
+const enumAssociation = ['hsm', 'hst', 'hfgg', 'hfgo', 'kisd', 'ext']
 const enumType = ['staff', 'student', 'management']
 const profilePattern = /^gpu-/
 
