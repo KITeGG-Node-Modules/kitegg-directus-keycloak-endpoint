@@ -5,6 +5,7 @@ import { filterUser } from './filter-props.js'
 import { generatePassword } from './random-password.js'
 import { handleErrorResponse } from './handle-error-response.js'
 import { isRequestAllowed } from './is-request-allowed.js'
+import { getRoleForGroupId } from 'directus-extension-keycloak-auth-hook/src'
 
 import { LOG_PREFIX } from './constants.js'
 
@@ -144,28 +145,36 @@ export default {
       const {data: groups} = await client.get(`/groups`)
       const {data: subjectGroups} = await client.get(`/users/${req.params.id}/groups`)
 
+      const existingAssociation = subjectGroups.find(group => enumAssociation.includes(group.name))
+      const existingType = subjectGroups.find(group => enumType.includes(group.name))
+      const groupId = [existingAssociation, existingType]
+      let updateRole = false
+
       if (data.association) {
-        const existingAssociation = subjectGroups.find(group => enumAssociation.includes(group.name))
         const association = groups.find(group => group.name === data.association)
         if (data.association !== existingAssociation?.name) {
           if (existingAssociation) {
             await client.delete(`/users/${req.params.id}/groups/${existingAssociation.id}`)
           }
           await client.put(`/users/${req.params.id}/groups/${association.id}`)
+          groupId[0] = association.id
+          updateRole = true
         }
         delete data.association
       }
       if (data.type) {
-        const existingType = subjectGroups.find(group => enumType.includes(group.name))
         const type = groups.find(group => group.name === data.type)
         if (data.type !== existingType?.name) {
           if (existingType) {
             await client.delete(`/users/${req.params.id}/groups/${existingType.id}`)
           }
           await client.put(`/users/${req.params.id}/groups/${type.id}`)
+          groupId[1] = type.id
+          updateRole = true
         }
         delete data.type
       }
+
       if (data.profiles) {
         const existingProfiles = subjectGroups.filter(group => profilePattern.test(group.name))
         for (const profileName of data.profiles) {
@@ -188,6 +197,9 @@ export default {
       if (data.firstName) directusPayload.first_name = data.firstName
       if (data.lastName) directusPayload.last_name = data.lastName
       if (typeof data.auth_data !== 'undefined') directusPayload.auth_data = data.auth_data
+      if (updateRole) {
+        directusPayload.role = await getRoleForGroupId(groupId.join('-'), services, ctx)
+      }
 
       if (Object.keys(directusPayload).length) {
         const usersService = new UsersService({schema: req.schema, accountability: req.accountability})
