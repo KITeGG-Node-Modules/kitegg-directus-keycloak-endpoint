@@ -30,6 +30,9 @@ const userSchema = {
       if (isValid) isValid = profilePattern.test(profileName)
       return isValid
     }, true)
+  },
+  auth_data: {
+    internal: true
   }
 }
 
