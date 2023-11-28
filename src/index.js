@@ -189,18 +189,20 @@ export default {
       if (data.lastName) directusPayload.last_name = data.lastName
       if (typeof data.auth_data !== 'undefined') directusPayload.auth_data = data.auth_data
 
-      const usersService = new UsersService({schema: req.schema, accountability: req.accountability})
-      try {
-        const user = (await usersService.readByQuery({
-          filter: {
-            external_identifier: req.params.id
+      if (Object.keys(directusPayload).length) {
+        const usersService = new UsersService({schema: req.schema, accountability: req.accountability})
+        try {
+          const user = (await usersService.readByQuery({
+            filter: {
+              external_identifier: req.params.id
+            }
+          })).shift()
+          if (user) {
+            await usersService.updateOne(user.id, directusPayload)
           }
-        })).shift()
-        if (user) {
-          await usersService.updateOne(user.id, directusPayload)
+        } catch (err) {
+          logger.error(`${LOG_PREFIX}Failed to update Directus user: ${err.message}`)
         }
-      } catch (err) {
-        logger.error(`${LOG_PREFIX}Failed to update Directus user: ${err.message}`)
       }
 
       return result || { success: true }
