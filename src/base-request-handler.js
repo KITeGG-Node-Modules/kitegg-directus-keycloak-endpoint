@@ -24,6 +24,15 @@ function baseRequestHandler (requestFunction, context) {
           console.log('Keycloak: Fetch external user id', user.external_identifier);
           ({data: userGroups} = await client.get(`/users/${user?.external_identifier}/groups`))
           isAllowed = !!userGroups.find(group => ['staff', 'management'].includes(group.name))
+          if (!isAllowed && user.external_identifier === req.params.id) {
+            const propWhitelist = ['firstName', 'lastName', 'email']
+            if (req.data) {
+              for (const key in req.data) {
+                if (!propWhitelist.includes(key)) delete req.data[key]
+              }
+            }
+            isAllowed = true
+          }
         }
         if (req.accountability.admin) {
           console.log('Keycloak: Admin user')
