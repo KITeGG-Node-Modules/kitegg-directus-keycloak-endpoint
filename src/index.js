@@ -13,6 +13,10 @@ export default {
   handler: (router, context) => {
     const {services, logger} = context
     const {ItemsService, UsersService} = services
+
+    const allowGroups = ['staff', 'management']
+    const propWhitelist = ['firstName', 'lastName', 'email']
+
     //
     // Users
     //
@@ -22,7 +26,7 @@ export default {
     router.get('/users', baseRequestHandler(async ctx => {
       const {data: users} = await ctx.client.get('/users', {params: ctx.req.query})
       return users.map(user => filterUser(user))
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // GET
@@ -39,7 +43,7 @@ export default {
       user.profiles = groups.filter(group => group.name.indexOf('gpu-') === 0).map(group => group.name)
 
       return filterUser(user)
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // POST
@@ -122,7 +126,7 @@ export default {
         directusUserId,
         temporaryPassword: pwd
       }, data)
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // PATCH
@@ -206,7 +210,7 @@ export default {
       }
 
       return result || { success: true }
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // DELETE
@@ -245,7 +249,7 @@ export default {
           directusError: err.message
         }
       }
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // Reset password
@@ -266,27 +270,27 @@ export default {
       return {
         temporaryPassword
       }
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // Associations
     router.get('/associations', baseRequestHandler(async ctx => {
       const {data} = await ctx.client.get('/groups')
       return data.filter(group => enumAssociation.includes(group.name)).map(group => group.name)
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // Types
     router.get('/types', baseRequestHandler(async ctx => {
       const {data} = await ctx.client.get('/groups')
       return data.filter(group => enumType.includes(group.name)).map(group => group.name)
-    }, context))
+    }, context, allowGroups, propWhitelist))
 
     //
     // Profiles
     router.get('/profiles', baseRequestHandler(async ctx => {
       const {data} = await ctx.client.get('/groups')
       return data.filter(group => profilePattern.test(group.name)).map(group => group.name)
-    }, context))
+    }, context, allowGroups, propWhitelist))
   }
 }
