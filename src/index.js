@@ -1,9 +1,9 @@
 import { basename } from 'path'
-import { baseRequestHandler } from './base-request-handler.js'
+import { baseRequestHandler } from 'kitegg-directus-extension-common'
 import { enumType, enumAssociation, profilePattern, validateUser } from './validations.js'
 import { filterUser } from './filter-props.js'
 import { generatePassword } from './random-password.js'
-import { handleErrorResponse } from './handle-error-response.js'
+import { handleErrorResponse } from 'kitegg-directus-extension-common'
 import { isRequestAllowed } from './is-request-allowed.js'
 
 import { LOG_PREFIX } from './constants.js'

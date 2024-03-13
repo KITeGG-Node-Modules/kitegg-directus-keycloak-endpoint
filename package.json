@@ -21,6 +21,7 @@
 	"dependencies": {
 		"@directus/errors": "^0.0.1",
 		"axios": "^1.4.0",
+		"kitegg-directus-extension-common": "github:KITeGG-Node-Modules/kitegg-directus-extension-common",
 		"querystring": "^0.2.1",
 		"secure-random-password": "^0.2.3",
 		"validator": "^13.9.0"
